@@ -5,11 +5,21 @@ const path = require("path");
 const fs = require('fs');
 const crypto = require('crypto');
 const requestSync = require('sync-request');
+const glob = require("glob")
 
 const url = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
 
 async function main() {
-    var file_path = core.getInput('args');
+    var ori_file_path = core.getInput('args');
+    var file_path = '';
+    var files = glob.sync(ori_file_path);
+    if(files.length > 0) {
+        file_path = files[0];
+    }
+    if(file_path.length == 0) {
+        core.setFailed(`The file does not exist: ${ori_file_path}`);
+        return;
+    }
     var file_name = path.basename(file_path);
     var ota_server_url = core.getInput('ota_server_url');
     var ota_server_user = core.getInput('ota_server_user');
