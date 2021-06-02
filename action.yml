@@ -1,0 +1,33 @@
+name: 'Push Release'
+description: 'Push Release Info to OTA Server and Push bin file to aliyun'
+inputs:
+  args:
+    description: 'input bin file, Please put the file in the root directory of the working directory.'
+    required: true
+  ota_software_token:
+    description: 'OTA Server Software Token'
+    required: true
+  ota_server_url:
+    description: 'OTA Server URL'
+    required: true
+  ota_server_user:
+    description: 'OTA Server username'
+    required: true
+  ota_server_pwd:
+    description: 'OTA Server password'
+    required: true
+  aliyun_oss_url:
+    description: 'Aliyun OSS Server URL'
+    required: true
+  aliyun_oss_endpoint:
+    description: 'Aliyun OSS Server URL'
+    required: true
+  aliyun_access_id:
+    description: 'Aliyun OSS Server username'
+    required: true
+  aliyun_access_secret:
+    description: 'Aliyun OSS Server password'
+    required: true
+runs:
+  using: 'node12'
+  main: 'index.js'
