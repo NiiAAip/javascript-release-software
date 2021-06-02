@@ -9,7 +9,7 @@ jobs:
       - name: Push Firmware And INFO
         uses: niiaaip/docker-release-software@main
         with:
-          args: test_v1.1.2.bin
+          args: test_v1.1.3.bin
           aliyun_oss_endpoint: ${{ secrets.ALIYUN_OSS_ENDPOINT }}
           aliyun_access_id: ${{ secrets.ALIYUN_ACCESS_ID }}
           aliyun_access_secret: ${{ secrets.ALIYUN_ACCESS_SECRET }}
