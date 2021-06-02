@@ -46,29 +46,33 @@ async function main() {
         "-L",
         "CH"
     ]);
-    await exec.exec("ossutil", [
+    var exitCode = await exec.exec("ossutil", [
         "cp",
         "-rf",
         file_path,
         aliyun_oss_url
     ]);
-
+    console.log(exitCode);
+    if(exitCode != 0) {
+        core.setFailed("ossutil upload Failed");
+        return;
+    }
     var array = file_path.match(/[0-9]+\.[0-9]+\.[0-9]+/g);
     var VERSION = array ? array[0] : "0.0.0"
     var MD5 = crypto.createHash('md5').update(fs.readFileSync(file_path), 'utf8').digest('hex');
     var JOB_ID = +new Date() / 1000;
-    var PATH = '33'//core.getInput('aliyun_oss_url');
+    var PATH_ = core.getInput('aliyun_oss_url') + path.basename(file_path);
 
     var RESULT = `{
         "Version": "${VERSION}",
         "Job-ID": ${JOB_ID},
         "MD5": "${MD5}",
         "Release-Note": "",
-        "Path": "${PATH}",
+        "Path": "${PATH_}",
         "Path2": "",
         "Path3": ""
     }`;
-    console.log(RESULT, ota_server_user)
+    console.log(RESULT)
     var form_data = {
         headers: { 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
         body: `'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n${ota_server_user}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n${ota_server_pwd}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--'`
