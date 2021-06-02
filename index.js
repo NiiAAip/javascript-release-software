@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const requestSync = require('sync-request');
 
-const url = "http://gosspublic.alicdn.com/ossutil/1.6.7/ossutil64";
+const url = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
 
 async function main() {
     var file_path = core.getInput('args');
@@ -20,7 +20,7 @@ async function main() {
     var aliyun_access_secret = core.getInput('aliyun_access_secret');
     var aliyun_oss_url = core.getInput('aliyun_oss_url');
 
-    let toolPath = toolCache.find("ossutil", "1.6.7");
+    let toolPath = toolCache.find("ossutil", "1.7.1");
     if (!toolPath) {
         core.info(`downloading from ${url}`);
         toolPath = await toolCache.downloadTool(url);
@@ -58,14 +58,10 @@ async function main() {
     }
     core.info(`exitCode: ${exitCode}`);
     let myOutput = '';
-    let myError = '';
     const options = {};
     options.listeners = {
-    stdout: (data: Buffer) => {
+    stdout: (data) => {
         myOutput += data.toString();
-    },
-    stderr: (data: Buffer) => {
-        myError += data.toString();
     }
     };
     await exec.exec("ossutil", [
@@ -73,7 +69,10 @@ async function main() {
         aliyun_oss_url + file_name,
         "--disable-encode-slash"
     ], options);
-    core.info(myOutput);
+    if(exitCode != 0) {
+        core.setFailed("ossutil get download path Failed");
+        return;
+    }
 
     var array = file_path.match(/[0-9]+\.[0-9]+\.[0-9]+/g);
     var VERSION = array ? array[0] : "0.0.0"
@@ -90,6 +89,7 @@ async function main() {
         "Path2": "",
         "Path3": ""
     }`;
+    core.info(RESULT);
     var form_data = {
         headers: { 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' },
         body: `'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\n${ota_server_user}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"password\"\r\n\r\n${ota_server_pwd}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--'`
