@@ -6,17 +6,19 @@ const fs = require('fs');
 const crypto = require('crypto');
 const requestSync = require('sync-request');
 const glob = require("glob")
+const compressing = require('compressing');
 
-const url = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
+const url_linux = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
+const url_win = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64.zip";
 
 async function main() {
     var ori_file_path = core.getInput('args');
     var file_path = '';
     var files = glob.sync(ori_file_path);
-    if(files.length > 0) {
+    if (files.length > 0) {
         file_path = files[0];
     }
-    if(file_path.length == 0) {
+    if (file_path.length == 0) {
         core.setFailed(`The file does not exist: ${ori_file_path}`);
         return;
     }
@@ -30,22 +32,44 @@ async function main() {
     var aliyun_access_secret = core.getInput('aliyun_access_secret');
     var aliyun_oss_url = core.getInput('aliyun_oss_url');
 
-    let toolPath = toolCache.find("ossutil", "1.7.1");
-    if (!toolPath) {
-        core.info(`downloading from ${url}`);
-        toolPath = await toolCache.downloadTool(url);
-        core.info(`downloaded to ${toolPath}`);
+    var ossutilName = "ossutil";
+    if (process.platform == "win32") {
+        ossutilName = "ossutil64.exe"
+
+        let toolPath = toolCache.find(ossutilName, "1.7.1");
+        if (!toolPath) {
+            core.info(`downloading from ${url_win}`);
+            toolPath = await toolCache.downloadTool(url_win);
+            core.info(`downloaded to ${toolPath}`);
+        }
+        const bin = path.join(__dirname, ".bin");
+        if (!fs.existsSync(bin)) {
+            fs.mkdirSync(bin, {
+                recursive: true
+            });
+        }
+
+        await compressing.zip.uncompress(toolPath, bin);
+        fs.copyFileSync(path.join(bin, 'ossutil64\\' + ossutilName), path.join(bin, ossutilName));
+        core.addPath(bin);
+    } else {
+        let toolPath = toolCache.find(ossutilName, "1.7.1");
+        if (!toolPath) {
+            core.info(`downloading from ${url_linux}`);
+            toolPath = await toolCache.downloadTool(url_linux);
+            core.info(`downloaded to ${toolPath}`);
+        }
+        const bin = path.join(__dirname, ".bin");
+        if (!fs.existsSync(bin)) {
+            fs.mkdirSync(bin, {
+                recursive: true
+            });
+        }
+        fs.copyFileSync(toolPath, path.join(bin, ossutilName));
+        fs.chmodSync(path.join(bin, ossutilName), 0o755);
+        core.addPath(bin);
     }
-    const bin = path.join(__dirname, ".bin");
-    if (!fs.existsSync(bin)) {
-        fs.mkdirSync(bin, {
-            recursive: true
-        });
-    }
-    fs.copyFileSync(toolPath, path.join(bin, "ossutil"));
-    fs.chmodSync(path.join(bin, "ossutil"), 0o755);
-    core.addPath(bin);
-    await exec.exec("ossutil", [
+    await exec.exec(ossutilName, [
         "config",
         "-e",
         aliyun_oss_endpoint,
@@ -56,13 +80,13 @@ async function main() {
         "-L",
         "CH"
     ]);
-    var exitCode = await exec.exec("ossutil", [
+    var exitCode = await exec.exec(ossutilName, [
         "cp",
         "-rf",
         file_path,
         aliyun_oss_url
     ]);
-    if(exitCode != 0) {
+    if (exitCode != 0) {
         core.setFailed("ossutil upload Failed");
         return;
     }
@@ -70,16 +94,16 @@ async function main() {
     let myOutput = '';
     const options = {};
     options.listeners = {
-    stdout: (data) => {
-        myOutput += data.toString();
-    }
+        stdout: (data) => {
+            myOutput += data.toString();
+        }
     };
-    await exec.exec("ossutil", [
+    await exec.exec(ossutilName, [
         "sign",
         aliyun_oss_url + file_name,
         "--disable-encode-slash"
     ], options);
-    if(exitCode != 0) {
+    if (exitCode != 0) {
         core.setFailed("ossutil get download path Failed");
         return;
     }
