@@ -19,6 +19,7 @@
     "fs": "^0.0.1-security",
     "glob": "^7.1.7",
     "path": "^0.12.7",
+    "showdown": "^2.1.0",
     "sync-request": "^6.1.0"
   }
 }

@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const requestSync = require('sync-request');
 const glob = require("glob")
 const compressing = require('compressing');
+const showdown  = require('showdown')
 
 const url_linux = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
 const url_win = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64.zip";
@@ -27,10 +28,17 @@ async function main() {
     var ota_server_user = core.getInput('ota_server_user');
     var ota_server_pwd = core.getInput('ota_server_pwd');
     var ota_software_token = core.getInput('ota_software_token');
+    var ota_release_note = core.getInput('ota_release_note');
     var aliyun_oss_endpoint = core.getInput('aliyun_oss_endpoint');
     var aliyun_access_id = core.getInput('aliyun_access_id');
     var aliyun_access_secret = core.getInput('aliyun_access_secret');
     var aliyun_oss_url = core.getInput('aliyun_oss_url');
+
+    if(ota_release_note.length != 0) {
+        var converter = new showdown.Converter();
+        ota_release_note = converter.makeHtml(ota_release_note);
+        ota_release_note = ota_release_note.replace(/\n/g, "");
+    }
 
     var ossutilName = "ossutil";
     if (process.platform == "win32") {
@@ -118,7 +126,7 @@ async function main() {
         "Version": "${VERSION}",
         "Job-ID": ${JOB_ID},
         "MD5": "${MD5}",
-        "Release-Note": "",
+        "Release-Note": "${ota_release_note}",
         "Path": "${PATH_}",
         "Path2": "",
         "Path3": ""
