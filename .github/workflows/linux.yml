@@ -19,3 +19,7 @@ jobs:
           ota_server_pwd: ${{ secrets.OTA_SERVER_PWD }}
           ota_software_token: ${{ secrets.OTA_SOFTWARE_TOKEN }}
           ota_release_note: ${{ github.event.head_commit.message }}
+      - name: Upload Change Log
+        run: |
+          ossutil config -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_ID }} -k ${{ secrets.ALIYUN_ACCESS_SECRET }} -L CH &&\
+          ossutil cp -f CHANGLELOG.md ${{ secrets.ALIYUN_OSS_URL }}CHANGLELOG.md
