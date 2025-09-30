@@ -29,6 +29,8 @@ async function main() {
     var ota_server_pwd = core.getInput('ota_server_pwd');
     var ota_software_token = core.getInput('ota_software_token');
     var ota_release_note = core.getInput('ota_release_note');
+    var ota_path2_url = core.getInput('ota_path2_url');
+    var ota_path3_url = core.getInput('ota_path3_url');
     var aliyun_oss_endpoint = core.getInput('aliyun_oss_endpoint');
     var aliyun_access_id = core.getInput('aliyun_access_id');
     var aliyun_access_secret = core.getInput('aliyun_access_secret');
@@ -128,8 +130,8 @@ async function main() {
         "MD5": "${MD5}",
         "Release-Note": "${ota_release_note}",
         "Path": "${PATH_}",
-        "Path2": "",
-        "Path3": ""
+        "Path2": "${ota_path2_url}",
+        "Path3": "${ota_path3_url}"
     }`;
     core.info(RESULT);
     var form_data = {
