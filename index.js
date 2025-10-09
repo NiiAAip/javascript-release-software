@@ -9,8 +9,7 @@ const glob = require("glob")
 const compressing = require('compressing');
 const showdown  = require('showdown')
 
-const url_linux = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64";
-const url_win = "http://gosspublic.alicdn.com/ossutil/1.7.1/ossutil64.zip";
+const url_win = "http://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64.zip";
 
 async function main() {
     var ori_file_path = core.getInput('args');
@@ -63,21 +62,31 @@ async function main() {
         fs.copyFileSync(path.join(bin, 'ossutil64\\' + ossutilName), path.join(bin, ossutilName));
         core.addPath(bin);
     } else {
-        let toolPath = toolCache.find(ossutilName, "1.7.1");
-        if (!toolPath) {
-            core.info(`downloading from ${url_linux}`);
-            toolPath = await toolCache.downloadTool(url_linux);
-            core.info(`downloaded to ${toolPath}`);
-        }
-        const bin = path.join(__dirname, ".bin");
-        if (!fs.existsSync(bin)) {
-            fs.mkdirSync(bin, {
-                recursive: true
+        // 检查系统是否已经安装 ossutil
+        let ossutilInstalled = false;
+        try {
+            await exec.exec('which', ['ossutil'], {
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        if (data.toString().trim().length > 0) {
+                            ossutilInstalled = true;
+                        }
+                    }
+                }
             });
+        } catch (error) {
+            ossutilInstalled = false;
         }
-        fs.copyFileSync(toolPath, path.join(bin, ossutilName));
-        fs.chmodSync(path.join(bin, ossutilName), 0o755);
-        core.addPath(bin);
+
+        if (ossutilInstalled) {
+            core.info('ossutil 已经安装，跳过安装步骤');
+        } else {
+            core.info('ossutil 未安装，开始安装...');
+            await exec.exec('sh', ['-c', 'curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash']);
+            core.info('ossutil 安装完成');
+        }
     }
     await exec.exec(ossutilName, [
         "config",
