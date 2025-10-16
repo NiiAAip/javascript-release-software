@@ -9,7 +9,7 @@ const glob = require("glob")
 const compressing = require('compressing');
 const showdown  = require('showdown')
 
-const url_win = "http://gosspublic.alicdn.com/ossutil/1.7.18/ossutil64.zip";
+const url_win = "https://gosspublic.alicdn.com/ossutil/1.7.19/ossutil-v1.7.19-windows-amd64.zip?spm=a2c4g.11186623.0.0.123b3000oIFSWe&file=ossutil-v1.7.19-windows-amd64.zip";
 
 async function main() {
     var ori_file_path = core.getInput('args');
@@ -45,22 +45,46 @@ async function main() {
     if (process.platform == "win32") {
         ossutilName = "ossutil64.exe"
 
-        let toolPath = toolCache.find(ossutilName, "1.7.1");
-        if (!toolPath) {
-            core.info(`downloading from ${url_win}`);
-            toolPath = await toolCache.downloadTool(url_win);
-            core.info(`downloaded to ${toolPath}`);
-        }
-        const bin = path.join(__dirname, ".bin");
-        if (!fs.existsSync(bin)) {
-            fs.mkdirSync(bin, {
-                recursive: true
+        // 检查系统是否已经安装 ossutil64.exe
+        let ossutilInstalled = false;
+        try {
+            await exec.exec('where', ['ossutil64.exe'], {
+                silent: true,
+                ignoreReturnCode: true,
+                listeners: {
+                    stdout: (data) => {
+                        if (data.toString().trim().length > 0) {
+                            ossutilInstalled = true;
+                        }
+                    }
+                }
             });
+        } catch (error) {
+            ossutilInstalled = false;
         }
 
-        await compressing.zip.uncompress(toolPath, bin);
-        fs.copyFileSync(path.join(bin, 'ossutil64\\' + ossutilName), path.join(bin, ossutilName));
-        core.addPath(bin);
+        if (ossutilInstalled) {
+            core.info('ossutil64.exe 已经安装，跳过安装步骤');
+        } else {
+            core.info('ossutil64.exe 未安装，开始安装...');
+            let toolPath = toolCache.find(ossutilName, "1.7.19");
+            if (!toolPath) {
+                core.info(`downloading from ${url_win}`);
+                toolPath = await toolCache.downloadTool(url_win);
+                core.info(`downloaded to ${toolPath}`);
+            }
+            const bin = path.join(__dirname, ".bin");
+            if (!fs.existsSync(bin)) {
+                fs.mkdirSync(bin, {
+                    recursive: true
+                });
+            }
+
+            await compressing.zip.uncompress(toolPath, bin);
+            fs.copyFileSync(path.join(bin, 'ossutil64\\' + ossutilName), path.join(bin, ossutilName));
+            core.addPath(bin);
+            core.info('ossutil64.exe 安装完成');
+        }
     } else {
         // 检查系统是否已经安装 ossutil
         let ossutilInstalled = false;
